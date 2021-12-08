@@ -41,7 +41,7 @@ xVector = zeros(size(tVector));     % initialize x vector
 gammaVector = zeros(size(tVector)); % initialize y vector 
 
 beetleMortality = .15;       % natural beetle death rate 1/time
-rFumigation = 0.3;           % fumigation rate 1/time
+rFumigation = 0.2;           % fumigation rate 1/time
 rBeetle = .35;               % intrinsic beetle 1/time
 rHuman = .3;               % intrinsic policy 1/ttime
 rTree = .09;                 % intrinisc tree growth 1/time
@@ -117,11 +117,11 @@ xRootTwo = ((b * gamma) - sqrt(((b*gamma)^2)+(4*b*(1*gamma)))) / b
 
 
 set(gca,'fontsize',14)
-title('Beetlemania')
+title('Enter Name Here')
 xlabel('Trees'), ylabel('Profit')              %establish axis title
 grid on
 
-plot(xVector,gammaVector,'k');                 % plot points
+plot(xVector,gammaVector,'k');        % plot points
 % THIS IS THE STARTING PONT 
 plot(xVector(1),gammaVector(1),'ok','markersize',8);
 % THIS IS THE END POINT
