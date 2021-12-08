@@ -1,6 +1,8 @@
-clear, close all, format compact, clc
+clear, close all, format compact
 % ABE4649 FINAL GROUP PROJECT 
-% 
+% STEVEN COLL, KELSEY VOUGHT, NATHAN WOOD
+% FALL 2021 
+%
 % The purpose of this project is to model the 3 dimensional "eigenforest"
 % Model created by our group. 
 % The equations detail change in tree population (dx)
@@ -31,74 +33,99 @@ clear, close all, format compact, clc
 
 %SETUP PARAMETERS
 
-time = 1500;                % establish time
+time = 2000;                % establish time 
 dt = .001;                  % establish time interval
 tVector = [1:dt:time]';      % create vector 1-time @ dt increment
 
-xVector = zeros(size(tVector));
-gammaVector = zeros(size(tVector));
+xVector = zeros(size(tVector));     % initialize x vector
+gammaVector = zeros(size(tVector)); % initialize y vector 
 
-beetleMortality = .2;       % natural beetle death rate 1/time
-rFumigation = .1;           % fumigation rate 1/time
-rBeetle = .3;               % intrinsic beetle 1/time
-rHuman = .1;               % intrinsic policy 1/ttime
-rTree = .08;                 % intrinisc tree growth 1/time
-beetleDamage = .12;         % beetle damage to tree 1/(beetle * tree)
-tree = 5000;                   % Trees tree
-c = .0024;                     % cost of fumigation $/beetle
-q = 8;                      % num. fumigations dimless
-f = 1;                      %
-P = 4;                      % profitability $/tree
-h = .23;                     % harvest effor 1/$
-K = 3000;                      % tree carry capacity tree
-z = .11;                    % habitability for beetle 1/tree
-H = 12;                     % policy effort $ 
+beetleMortality = .15;       % natural beetle death rate 1/time
+rFumigation = 0.3;           % fumigation rate 1/time
+rBeetle = .35;               % intrinsic beetle 1/time
+rHuman = .3;               % intrinsic policy 1/ttime
+rTree = .09;                 % intrinisc tree growth 1/time
+beetleDamage =  .24;         % beetle damage to tree 1/(beetle * tree)
+tree = 900;                   % Trees tree curse the eigentrees
+c = .4;                     % cost of fumigation $/beetle
+q = 12;                      % num. fumigations dimless
+f = 1;                      
+P = 55;                      % profitability $/tree
+h = .21;                     % harvest effort 1/$
+K = 1000;                      % tree carry capacity tree
+z = 200;                    % habitability for beetle 1/tree
+H = 6;                     % policy effort $ 
+gVal = 300;                                         % beetles per dollar
 
-% BEGIN PRECOMPUTATIONS 
-beetleEq = (rFumigation*H)/((z*rBeetle*tree) - (beetleMortality))
-theta = (rHuman*P*h*K)/(rTree)                  %
-phi = (c*q*rHuman*h*f)/(rTree*beetleDamage)     %
-alfa = (beetleEq*beetleDamage)/(rTree)          %
-gamma = (h*H*f)/(rTree)                         %
+% BEGIN PREClOMPUTATIONS 
 
-xVector(1) = 900;                               % init x condition
-gammaVector(1) = 55.2;                         % init gamma cond. 
+beetleEq = (h*rHuman*P*K)/(rTree)               % nondim unit beta 
+theta = (rHuman*P*h*K)/(rTree)                  % nondim unit theta
+phi = (c*q*rHuman*h*f)/(rTree*beetleDamage)     % nondim unit phi 
+alfa = (rFumigation*beetleDamage * gVal)/(h*f*z*rBeetle*K)          % nondim unit alfa
+gamma = ((c*q*rFumigation*rHuman)/(z*rBeetle*K*rTree))                      % nondim unit gamma
+y = (H*h*f)/(rTree)
+s = (beetleMortality)/(z * rBeetle * K) 
+
+% INITIAL CONDITIONS FOR EULER 
+xVector(1) = tree;                               % init x condition
+gammaVector(1) = H;                         % init gamma cond. 
 
 % BEGIN EULER 
-for t = 1:(length(tVector)-1)               
+for t = 1:(length(tVector )-1)               
     % for each incremental unit time
     %    iterate through the provided nondim eqn to populate xVector
     %    and gammaVector 
+    %    y(n+1) = y(n) + delta*(f(n+1) : n > 0 
     a = alfa;                               
     th = theta;         
     p = phi;
+    b = beetleEq;
     x = xVector(t);
     g = gammaVector(t);
-    xVector(t+1) = xVector(t) + dt*(x*(1-x) - a*x - gamma*x);      %dTree
-    gammaVector(t+1) = gammaVector(t) + dt*((th*gamma*x) - (p*x)); %dPolicy
-end 
+    xVector(t+1) = xVector(t) + dt*(x*(1-x) - ((a*x*y)/(x-s)) - y*x);      %dTree
+    gammaVector(t+1) = gammaVector(t) + dt*(b*x*y) - ((gamma*y)/(x-f)); %dPolicy
+end % END FOR LOOP
 
 %PLOTTING SYSTEM 
 
 figure(101)                           %initialize plot
 %ISOCLINE STUFF 
-plot([0 0],[-1 1.2],'b'); hold on
-xx = linspace(0,1,101);
-plot(xx,1-xx,'b');
-% y-isoclines (red)
-plot([-1 1.2],[0 0],'r');
-plot([1 1]*gamma,[-1 1.2],'r');
-%xlim([-0.02 1.1]), ylim([-0.02 1.1])  %establish axis boundaries  
-set(gca,'fontsize',16)
-xlabel('Trees'), ylabel('Policy')              %establish axis title
+% TO COMPUTE ISOCLINE 1-x-((alfa*y)/(x-delta)) -y = 0 
+% WE NEED TO COMPUTE EULER
+eulerClineVectorOne = zeros(size(tVector));
+eulerClineVectorOne(1) = 0;                 % initial eulerCline value 
+% BEGEIN EULER FOR ISOCLINE 
+for t = 1:(length(tVector )-1)               
+    % for each iteration in t 
+    %   iterate through provided isocline eqn to ppulate
+    %   eulerClineVectorOne 1 - x - (*y)/(x-delta)) - y = 0 
+    a = alfa; 
+    x = xVector(t); 
+    eulerClineVectorOne(t+1) = eulerClineVectorOne(t) + dt*(((1-x)*(x-s))/(x-s+alfa)); 
+end % end isocline euler 
+
+plot(xVector,eulerClineVectorOne,'b'); hold on
+
+%WE NEED TO PLOT ROOTS OF OTHER ISOCLINE
+%    beetleEq*xRoot^2 - beetleEq*gamma*xRoot - gamma = 0 
+%    accomplish with quadratic eqn
+%    -b +- sqrt(b^2 - 4ac) / 2a 
+b = beetleEq
+xRootOne = ((b* gamma) + sqrt(((b*gamma)^2)+(4*b*(1*gamma)))) / b
+xRootTwo = ((b * gamma) - sqrt(((b*gamma)^2)+(4*b*(1*gamma)))) / b
+
+
+set(gca,'fontsize',14)
+title('Beetlemania')
+xlabel('Trees'), ylabel('Profit')              %establish axis title
 grid on
 
-plot(xVector,gammaVector,'k');        % plot points
-
+plot(xVector,gammaVector,'k');                 % plot points
 % THIS IS THE STARTING PONT 
 plot(xVector(1),gammaVector(1),'ok','markersize',8);
-
 % THIS IS THE END POINT
-plot(xVector(end),gammaVector(end),'pk','markersize',10,'markerfacecolor','k');
-
-%-EOF- 
+plot(xVector(end),gammaVector(end),'o','markersize',10,'markerfacecolor','k');
+plot(0,xRootOne,'r');
+plot(xRootOne,'r');
+%---EOF--- 
